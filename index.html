@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connect Four</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: Arial, sans-serif;
+        }
+
+        h1 {
+            margin: 20px;
+        }
+
+        #game-board {
+            display: grid;
+            grid-template-columns: repeat(7, 50px);
+            gap: 5px;
+        }
+
+        .cell {
+            width: 50px;
+            height: 50px;
+            background-color: #f3f3f3;
+            border: 1px solid #ccc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .cell.red {
+            background-color: red;
+        }
+
+        .cell.yellow {
+            background-color: yellow;
+        }
+
+        #status {
+            margin: 20px;
+        }
+
+        #reset-button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Connect Four</h1>
+    <div id="game-board"></div>
+    <div id="status"></div>
+    <button id="reset-button">Reset Game</button>
+    <script>
+        const columns = 7;
+        const rows = 6;
+        let currentPlayer = 'red';
+        let board = [];
+
+        const gameBoard = document.getElementById('game-board');
+        const status = document.getElementById('status');
+        const resetButton = document.getElementById('reset-button');
+
+        // Initialize board
+        function initializeBoard() {
+            board = Array(rows).fill(null).map(() => Array(columns).fill(null));
+            gameBoard.innerHTML = '';
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < columns; c++) {
+                    const cell = document.createElement('div');
+                    cell.classList.add('cell');
+                    cell.dataset.row = r;
+                    cell.dataset.column = c;
+                    cell.addEventListener('click', handleCellClick);
+                    gameBoard.appendChild(cell);
+                }
+            }
+            status.textContent = `Player ${currentPlayer}'s turn`;
+        }
+
+        // Handle cell click
+        function handleCellClick(e) {
+            const column = parseInt(e.target.dataset.column);
+            for (let r = rows - 1; r >= 0; r--) {
+                if (!board[r][column]) {
+                    board[r][column] = currentPlayer;
+                    const cell = document.querySelector(`.cell[data-row='${r}'][data-column='${column}']`);
+                    cell.classList.add(currentPlayer);
+                    if (checkWin(r, column)) {
+                        status.textContent = `Player ${currentPlayer} wins!`;
+                        document.querySelectorAll('.cell').forEach(cell => cell.removeEventListener('click', handleCellClick));
+                    } else {
+                        currentPlayer = currentPlayer === 'red' ? 'yellow' : 'red';
+                        status.textContent = `Player ${currentPlayer}'s turn`;
+                    }
+                    break;
+                }
+            }
+        }
+
+        // Check for win
+        function checkWin(row, col) {
+            return checkDirection(row, col, 1, 0) ||  // horizontal
+                   checkDirection(row, col, 0, 1) ||  // vertical
+                   checkDirection(row, col, 1, 1) ||  // diagonal down-right
+                   checkDirection(row, col, 1, -1);   // diagonal down-left
+        }
+
+        // Check direction
+        function checkDirection(row, col, rowDir, colDir) {
+            let count = 0;
+            let r = row;
+            let c = col;
+            while (isValid(r, c) && board[r][c] === currentPlayer) {
+                count++;
+                r += rowDir;
+                c += colDir;
+            }
+            r = row - rowDir;
+            c = col - colDir;
+            while (isValid(r, c) && board[r][c] === currentPlayer) {
+                count++;
+                r -= rowDir;
+                c -= colDir;
+            }
+            return count >= 4;
+        }
+
+        // Check if cell is valid
+        function isValid(row, col) {
+            return row >= 0 && row < rows && col >= 0 && col < columns;
+        }
+
+        // Reset game
+        resetButton.addEventListener('click', initializeBoard);
+
+        // Initialize game on load
+        initializeBoard();
+    </script>
+</body>
+</html>
